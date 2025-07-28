@@ -1,0 +1,60 @@
+# scraper/html_fetcher.py
+"""
+Module for fetching HTML content from web pages
+"""
+
+import requests
+from bs4 import BeautifulSoup
+import time
+from typing import Optional
+from config.settings import REQUEST_DELAY
+
+
+def get_books_html(url: str, delay: float = REQUEST_DELAY) -> Optional[BeautifulSoup]:
+    """
+    Fetch the HTML content of a book page.
+
+    Args:
+        url (str): The URL of the book page.
+        delay (float): Delay between requests in seconds.
+
+    Returns:
+        BeautifulSoup: A BeautifulSoup object containing the HTML content,
+                      or None if the request failed.
+    
+    Raises:
+        requests.RequestException: If the HTTP request fails.
+    """
+    try:
+        # Ajouter un délai pour être respectueux du serveur
+        if delay > 0:
+            time.sleep(delay)
+            
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # Lève une exception pour les codes d'erreur HTTP
+        
+        return BeautifulSoup(response.content, "html.parser")
+    
+    except requests.RequestException as e:
+        print(f"Erreur lors de la récupération de {url}: {e}")
+        return None
+    except Exception as e:
+        print(f"Erreur inattendue lors du parsing de {url}: {e}")
+        return None
+
+
+def check_page_exists(url: str) -> bool:
+    """
+    Check if a page exists and is accessible.
+
+    Args:
+        url (str): The URL to check.
+
+    Returns:
+        bool: True if the page exists and is accessible, False otherwise.
+    """
+    try:
+        response = requests.head(url, timeout=5)
+        return response.status_code == 200
+    except requests.RequestException:
+        return False
